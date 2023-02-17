@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NYC Today - In a row format</title>
+    <style>
+      main {
+        display: flex;
+        flex-direction: row;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        line-height: 20px;
+        color: #333333;
+      }
+
+      .row {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1 1 33%;
+      }
+
+      .icon {
+        max-width: 45px;
+      }
+
+      h3,
+      h4,
+      p {
+        margin: 0;
+        text-align: center;
+      }
+
+      h3 {
+        font-weight: normal;
+      }
+
+      p {
+        font-size: small;
+      }
+
+      #datafor {
+        color: #5d5d5d;
+        font-size: smaller;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="datafor"></div>
+    <main id="app"></main>
+  </body>
+  <script>
+    const app = document.getElementById("app");
+    const datafor = document.getElementById("datafor");
+    const cors =
+      "https://4dvj5dcxge.execute-api.us-east-1.amazonaws.com/staging/";
+    const url = "https://portal.311.nyc.gov/home-cal/";
+
+    fetch(cors + url)
+      .then((res) => res.json())
+      .then((d) => {
+        const date = new Date(d.date + " GMT");
+        const dayofweek = date.getDay();
+        datafor.innerText = date.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+        const rows = d.results;
+
+        let key = "";
+        switch (dayofweek) {
+          case 6:
+            key = "Saturday";
+            break;
+          case 7:
+            key = "Sunday";
+            break;
+          default:
+            key = "WeekDay";
+            break;
+        }
+
+        app.innerHTML = rows
+          .map((row) => {
+            const { IconUrl, CalendarName } = row;
+
+            return `<div class="row">
+                        <img class="icon" alt="${CalendarName} icon" src="${IconUrl}"></img>
+                        <h3>${CalendarName}</h3>
+                        <h4>${row[key + "RecordName"]}</h4>
+                        <p>${row[key + "ContentFormat"]}</p>
+                    </div>`;
+          })
+          .join("");
+      });
+  </script>
+</html>
