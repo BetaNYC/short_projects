@@ -48,54 +48,84 @@
     </style>
   </head>
   <body>
-    <div id="datafor"></div>
+    <form id="datafor">
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" />
+    </form>
+
     <main id="app"></main>
   </body>
   <script>
     const app = document.getElementById("app");
-    const datafor = document.getElementById("datafor");
+    const dateInput = document.getElementById("date");
     const cors =
       "https://4dvj5dcxge.execute-api.us-east-1.amazonaws.com/staging/";
     const url = "https://portal.311.nyc.gov/home-cal/";
 
-    fetch(cors + url)
-      .then((res) => res.json())
-      .then((d) => {
-        const date = new Date(d.date + " GMT");
-        const dayofweek = date.getDay();
-        datafor.innerText = date.toLocaleDateString("en-US", {
-          weekday: "long",
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
-        const rows = d.results;
+    function update(url) {
+      console.log(url);
+      fetch(cors + url)
+        .then((res) => res.json())
+        .then((d) => {
+          const date = new Date(d.date + " GMT");
+          const dayofweek = date.getDay();
+          const rows = d.results;
+          dateInput.valueAsDate = date;
 
-        let key = "";
-        switch (dayofweek) {
-          case 6:
-            key = "Saturday";
-            break;
-          case 7:
-            key = "Sunday";
-            break;
-          default:
-            key = "WeekDay";
-            break;
-        }
+          let key = "";
+          switch (dayofweek) {
+            case 6:
+              key = "Saturday";
+              break;
+            case 7:
+              key = "Sunday";
+              break;
+            default:
+              key = "WeekDay";
+              break;
+          }
 
-        app.innerHTML = rows
-          .map((row) => {
-            const { IconUrl, CalendarName } = row;
+          app.innerHTML = rows
+            .map((row) => {
+              const {
+                IconUrl,
+                CalendarName,
+                CalendarDetailName,
+                CalendarDetailStatus,
+                CalendarDetailMessage,
+              } = row;
 
-            return `<div class="row">
+              //holidays
+              console.log(CalendarDetailName);
+              if (CalendarDetailName.trim()) {
+                return `<div class="row">
+                        <img class="icon" alt="${CalendarName} icon" src="${IconUrl}"></img>
+                        <h3>${CalendarName}</h3>
+                        <h4>${CalendarDetailStatus}</h4>
+                        <p>${CalendarDetailMessage}</p>
+                    </div>`;
+              }
+
+              return `<div class="row">
                         <img class="icon" alt="${CalendarName} icon" src="${IconUrl}"></img>
                         <h3>${CalendarName}</h3>
                         <h4>${row[key + "RecordName"]}</h4>
                         <p>${row[key + "ContentFormat"]}</p>
                     </div>`;
-          })
-          .join("");
-      });
+            })
+            .join("");
+        });
+    }
+
+    update(url);
+    dateInput.addEventListener("change", (e) => {
+      const date = e.target.valueAsDate;
+      const day = date.getUTCDate();
+      const month = date.getUTCMonth() + 1;
+      const year = date.getUTCFullYear();
+      update(
+        `https://portal.311.nyc.gov/home-cal/?today=${month}/${day}/${year}`
+      );
+    });
   </script>
 </html>
