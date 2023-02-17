@@ -45,12 +45,17 @@
         font-size: smaller;
         margin-bottom: 1rem;
       }
+
+      #detail-name{
+        margin-left: 0.5rem;
+      }
     </style>
   </head>
   <body>
     <form id="datafor">
       <label for="date">Date:</label>
       <input type="date" id="date" name="date" />
+      <span id="detail-name"></span>
     </form>
 
     <main id="app"></main>
@@ -58,19 +63,18 @@
   <script>
     const app = document.getElementById("app");
     const dateInput = document.getElementById("date");
+    const detailName = document.getElementById("detail-name")
     const cors =
       "https://4dvj5dcxge.execute-api.us-east-1.amazonaws.com/staging/";
     const url = "https://portal.311.nyc.gov/home-cal/";
 
-    function update(url) {
-      console.log(url);
+    function update(url, gmt = " GMT") { // work around for today vs another date
       fetch(cors + url)
         .then((res) => res.json())
         .then((d) => {
-          const date = new Date(d.date + " GMT");
+          const date = new Date(d.date + gmt);
           const dayofweek = date.getDay();
           const rows = d.results;
-          dateInput.valueAsDate = date;
 
           let key = "";
           switch (dayofweek) {
@@ -95,9 +99,10 @@
                 CalendarDetailMessage,
               } = row;
 
+
               //holidays
-              console.log(CalendarDetailName);
               if (CalendarDetailName.trim()) {
+                detailName.innerText = CalendarDetailName
                 return `<div class="row">
                         <img class="icon" alt="${CalendarName} icon" src="${IconUrl}"></img>
                         <h3>${CalendarName}</h3>
@@ -106,6 +111,7 @@
                     </div>`;
               }
 
+              detailName.innerText = date.toLocaleString('en-US', { weekday: 'long'})
               return `<div class="row">
                         <img class="icon" alt="${CalendarName} icon" src="${IconUrl}"></img>
                         <h3>${CalendarName}</h3>
@@ -117,14 +123,19 @@
         });
     }
 
+    //init
+    const today = (new Date()).toLocaleDateString('en-CA') //workaround to get today's date not UTC date
+    dateInput.value = today
     update(url);
+    
     dateInput.addEventListener("change", (e) => {
       const date = e.target.valueAsDate;
       const day = date.getUTCDate();
       const month = date.getUTCMonth() + 1;
       const year = date.getUTCFullYear();
       update(
-        `https://portal.311.nyc.gov/home-cal/?today=${month}/${day}/${year}`
+        `https://portal.311.nyc.gov/home-cal/?today=${month}/${day}/${year}`,
+        ""
       );
     });
   </script>
