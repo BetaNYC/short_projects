@@ -12,7 +12,7 @@ const map = new maplibregl.Map({
   container: "map",
   style:
     "https://api.maptiler.com/maps/dataviz/style.json?key=1jzOl3SsjI6McCmXXNFt",
-  center: [-73.96156, 40.706411],
+  center: [-73.79825732, 40.76059195],
   zoom: 11,
 });
 
@@ -194,6 +194,35 @@ async function loadLayers(obj) {
     zipcodeData = data;
     hightlightZipcodes(localStorage.getItem("zipcodes") ?? default_values);
   }
+
+  // Create a popup, but don't add it to the map yet.
+  const popup = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+  });
+
+  map.on("click", "ADED-fill", (e) => {
+    // Change the cursor style as a UI indicator.
+    map.getCanvas().style.cursor = "pointer";
+
+    // Copy coordinates array.
+    const coordinates = turf
+      .centroid(e.features[0])
+      ["geometry"]["coordinates"].slice();
+    const description = e.features[0].properties.ElectDist;
+
+    // Ensure that if the map is zoomed out such that multiple
+    // copies of the feature are visible, the popup appears
+    // over the copy being pointed to.
+    while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+      coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+    }
+
+    // Populate the popup and set its coordinates
+    // based on the feature found.
+    popup.setLngLat(coordinates).setHTML(description).addTo(map);
+  });
+
 }
 
 const layerToggles = document.getElementById("layer-toggles");
@@ -219,17 +248,22 @@ const default_values = `
 textarea.value = localStorage.getItem("zipcodes") ?? default_values;
 
 function hightlightZipcodes(selectedZipcodes = "") {
-  const zipcodeList = selectedZipcodes.split('\n').filter(i => i.length === 6).map(d => Number(d.replace('-','')))
+  const zipcodeList = selectedZipcodes
+    .split("\n")
+    .filter((i) => i.length === 6)
+    .map((d) => Number(d.replace("-", "")));
   if (zipcodeData) {
-   //add properties selected: yes
-    const features = JSON.parse(JSON.stringify(zipcodeData.features)).map(feature => {
-        if(zipcodeList.includes(feature.properties.ElectDist)){
-            feature.properties.selected = 'yes'
+    //add properties selected: yes
+    const features = JSON.parse(JSON.stringify(zipcodeData.features)).map(
+      (feature) => {
+        if (zipcodeList.includes(feature.properties.ElectDist)) {
+          feature.properties.selected = "yes";
         }
-        return feature
-    })
-    map.getSource("ADED").setData({type: "FeatureCollection", features});
-    textarea.value = selectedZipcodes
+        return feature;
+      }
+    );
+    map.getSource("ADED").setData({ type: "FeatureCollection", features });
+    textarea.value = selectedZipcodes;
   }
 }
 
