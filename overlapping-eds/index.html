@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zipcode Boundary Viewer</title>
+    <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+    <link
+      href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #fcfcfc;
+        color: #2e2e2e;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        margin: 20px auto;
+        max-width: 1500px;
+        padding: 0 70px;
+        position: relative;
+      }
+      @media (max-width: 640px) {
+        main {
+          padding: 0 20px;
+        }
+      }
+      
+
+      #zipcode-form{
+        display: flex;
+        flex-direction: column;
+      }
+
+      #zipcode-form label{
+        margin-top: 2rem;
+        font-size: larger;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+    <div id="layer-toggles"></div>
+    <form id="zipcode-form">
+        <label for="zipcodes">List of AD-ED (ie. 26-010), separated by new lines</label>
+        <textarea  id="zipcodes-textarea" name="zipcodes" required
+       minlength="6" size="100" rows="10" cols="50">
+        </textarea>
+       <input type="submit" value="Submit"></input>
+    </form>
+      <div id="map" style="width: 100%; height: 70vh"></div>
+    </main>
+  </body>
+  <script src="main.js"></script>
+</html>
